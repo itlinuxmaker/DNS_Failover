@@ -16,7 +16,7 @@ This script is part of the redundant mail server concept described in detail at 
 
 ## Purpose
 
-The script is intended to be installed **directly on the Bind9 DNS server** and executed regularly via a **cron job**. It monitors multiple services on two mail servers and automatically updates the relevant DNS CNAME records using `nsupdate` when a failure is detected.
+The script is intended to be installed **directly on the Bind9 DNS server** and executed regularly via a **cron job**. It monitors multiple services on two mail servers and automatically updates the relevant DNS CNAME records using `nsupdate` when a failure is detected.  
 Additionally, the MySQL socket is checked for its existence and the storage capacity of the partition containing the movable server files is queried. Both of these actions can lead to a mail system failure.
 
 This ensures seamless service continuity by redirecting traffic to a backup mail server.
@@ -30,8 +30,7 @@ This ensures seamless service continuity by redirecting traffic to a backup mail
    - IMAPS (port 993)
    - HTTPS (port 443)
    - MySQL (port 3306)
-   - MySQL-Socket
-   - Storage capacity of var-partition
+   
 2. If a service is unreachable on one server:
    - Logs the failure
    - Performs DNS failover by updating CNAME records to point to the backup server
@@ -77,11 +76,13 @@ The script monitors the following DNS records:
 
 * Python 3
 * `dnspython` module
+*  paramiko module
 
 Install dependencies via pip:
 
-```bash
+```
 pip install dnspython
+pip install paramiko
 ```
 
 ---
