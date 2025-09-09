@@ -1,4 +1,6 @@
 import pytest
+import configparser
+import os
 from unittest.mock import patch, MagicMock
 from DNS_Failover import port_check
 from DNS_Failover import get_cname
@@ -18,6 +20,57 @@ License: GNU General Public License v3.0 or later
 """
 
 PORTS = [25, 110, 143, 443, 993, 995]                                    # Example port list
+CONFIG_PATH = os.getenv("DNSFAILOVER_CONFIG", "/usr/local/etc/dnsfailover/config.cfg")
+
+@pytest.fixture
+def config():
+    """Lädt die Konfigurationsdatei und gibt das ConfigParser-Objekt zurück."""
+    if not os.path.exists(CONFIG_PATH):
+        pytest.fail(f"Konfigurationsdatei {CONFIG_PATH} existiert nicht.")
+    
+    cfg = configparser.ConfigParser()
+    cfg.read(CONFIG_PATH)
+    
+    if not cfg.sections():
+        pytest.fail(f"Konfigurationsdatei {CONFIG_PATH} ist leer oder unlesbar.")
+    
+    return cfg
+
+def test_zones(config):
+    assert 'ZONES' in config
+    assert config['ZONES']['zone1']
+    assert config['ZONES']['zone2']
+
+def test_mx(config):
+    mx = config['MX']
+    assert mx['mxip1']
+    assert mx['mxip2']
+    assert mx['mx1']
+    assert mx['mx2']
+
+def test_settings(config):
+    s = config['SETTINGS']
+    assert s['ttl'].isdigit()
+    assert s['ns']
+    assert s['logfile']
+    assert s['space_limit'].isdigit()
+    assert s['partition']
+    assert s['user']
+
+def test_records(config):
+    r = config['RECORDS']
+    assert r['record_mx']
+    assert r['record_smtp']
+    assert r['record_imap']
+    assert r['record_mail']
+    assert r['record_pop3']
+
+def test_ports(config):
+    p = config['PORTS']
+    for key in ['smtp', 'imaps', 'https', 'mysql', 'port1', 'port2']:
+        assert key in p
+        assert p[key].isdigit()
+
 
 # Testing function 'port_check()'
 @pytest.mark.parametrize("port", PORTS)

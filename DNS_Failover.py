@@ -6,37 +6,51 @@ import dns.exception
 import dns.rcode
 import logging
 import paramiko
+import configparser
 
 """
 DNS_Failover
-Version: 1.0.0
+Version: 1.2.0
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
 
-zone1="domain1.tld"
-zone2="domain2.tld"
-mxip1="1.2.3.4"
-mxip2="1.2.3.5"
-mx1="mx1.example.com"
-mx2="mx2.example.com"
-record_mx="mx"
-record_smtp="smtp"
-record_imap="imap"
-record_mail="mail"
-record_pop3="pop3"
-smtp=25
-imaps=993
-https=443
-mysql=3306
-ttl=60                              # Short time to life here 60 secs
-ns="192.168.0.2"                    # IP address of Bind9-Server
-logfile="DNS-Failovertest.log"
-space_limit=97
-partition="/var/"
-user="root"
-port1="22"
-port2="22"
+config_path = "/usr/local/etc/dnsfailover/config.cfg"
+
+config = configparser.ConfigParser()
+config.read(config_path)
+
+if not config.sections():
+    raise FileNotFoundError(f"Configuration file {config_path} is empty or unreadable.")
+
+zone1 = config['ZONES']['zone1']
+zone2 = config['ZONES']['zone2']
+
+mxip1 = config['MX']['mxip1']
+mxip2 = config['MX']['mxip2']
+mx1 = config['MX']['mx1']
+mx2 = config['MX']['mx2']
+ns = config['SETTINGS']['ns']
+
+record_mx = config['RECORDS']['record_mx']
+record_smtp = config['RECORDS']['record_mx']
+record_imap = config['RECORDS']['record_smtp']
+record_mail = config['RECORDS']['record_imap']
+record_pop3 = config['RECORDS']['record_mail']
+
+smtp = int(config['PORTS']['smtp'])
+imaps = int(config['PORTS']['imaps'])
+https = int(config['PORTS']['https'])
+mysql = int(config['PORTS']['mysql'])
+port1 = int(config['PORTS']['port1'])
+port2 = int(config['PORTS']['port2'])
+
+ttl = int(config['SETTINGS']['ttl'])
+
+logfile = config['SETTINGS']['logfile']
+space_limit = int(config['SETTINGS']['space_limit'])
+partition = config['SETTINGS']['partition']
+user = config['SETTINGS']['user']
 
 # Definition of logging
 logging.basicConfig(
