@@ -81,6 +81,9 @@ The program expects the configuration file under */usr/local/etc/dnsfailover/*
 ```
 sudo mkdir -p /usr/local/etc/dnsfailover
 ```
+```
+sudo cp ~/DNS_Failover-master/config/config.cfg /usr/local/etc/dnsfailover/
+```
 
 ```
 sudo chown root:root /usr/local/etc/dnsfailover/config.cfg
