@@ -10,7 +10,7 @@ import configparser
 
 """
 DNS_Failover
-Version: 1.2.0
+Version: 1.2.1
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -55,10 +55,13 @@ user = config['SETTINGS']['user']
 # Definition of logging
 logging.basicConfig(
     filename=logfile, 
-    level=logging.DEBUG,
+    level=logging.INFO,
     style="{",
     format="{asctime} [{levelname:8}] [{funcName}] {message}",
     datefmt="%d.%m.%Y %H:%M:%S")
+
+logging.getLogger("paramiko").setLevel(logging.INFO)
+
 
 # Function to map Netcat "nc -zv IP-Adresse Port"
 def port_check(host, port, timeout=5):
