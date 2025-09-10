@@ -143,7 +143,7 @@ user = root
 ### 3. Copying the main program
 The Python program *DNS_Failover.py* is copied to */usr/local/bin/*:
 ```
-sudo cp ~/DNS_Failover-master/DNS_Failover.py /usr/local/bin/
+sudo cp ~/DNS_Failover/DNS_Failover.py /usr/local/bin/
 ```
 
 You can then run it with
