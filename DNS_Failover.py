@@ -10,7 +10,7 @@ import configparser
 
 """
 DNS_Failover
-Version: 1.2.1
+Version: 1.2.2
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
