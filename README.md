@@ -12,7 +12,9 @@
 
 This script is part of the redundant mail server concept described in detail at [https://www.linuxmaker.com](https://www.linuxmaker.com/linux/redundanter-mailserver.html).
 
-**Please note that this failover program is designed for use on Linux systems. Windows systems have not been considered.**
+> **Important:**  
+> This failover program is specifically designed to run on **Linux systems**.  
+> Compatibility with Windows or other operating systems has **not** been tested or considered.
 
 ---
 
