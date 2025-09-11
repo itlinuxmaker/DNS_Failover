@@ -9,6 +9,8 @@ from DNS_Failover import mysql_socket
 from DNS_Failover import fetchDiskUsage
 from DNS_Failover import service_availability
 from DNS_Failover import nsupdate_cnames
+from DNS_Failover import send_mail
+from email.message import EmailMessage
 from DNS_Failover import main
 import dns.resolver
 
@@ -248,6 +250,29 @@ def test_nsupdate_cnames_failure_rcode(mock_update_class, mock_query_tcp):
     )
 
     assert result is False
+
+# Testing send_mail function 
+@patch("smtplib.SMTP")
+def test_send_mail(mock_smtp):
+    test_cfg = {
+        'sender_email': 'noreply@test.local',
+        'recipient_email': 'admin@test.local',
+        'mx_server': 'smtp.test.local',
+        'port': '587',
+        'use_tls': 'true',
+        'username': 'testuser',
+        'password': 'testpass'
+    }
+
+    mock_smtp_instance = MagicMock()
+    mock_smtp.return_value.__enter__.return_value = mock_smtp_instance
+
+    send_mail("Test Subject", "Test message body", cfg=test_cfg)
+
+    mock_smtp.assert_called_once_with('mail.example.com', 587)
+    mock_smtp_instance.starttls.assert_called_once()
+    mock_smtp_instance.login.assert_called_once_with('user', 'pass')
+    assert mock_smtp_instance.send_message.call_count == 1
 
 # Testing main function
 @patch('DNS_Failover.fetchDiskUsage')

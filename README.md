@@ -1,6 +1,6 @@
 # DNS_Failover
 
-**Version**: 1.2.2  
+**Version**: 1.3.0
 **Author**: Andreas Günther ([github@it-linuxmaker.com](mailto:github@it-linuxmaker.com))  
 **License**: GNU General Public License v3.0 or later
 
@@ -64,7 +64,7 @@ The script monitors the following DNS records:
 
 * Python 3
 * `dnspython` module
-*  paramiko module
+* `paramiko` module
 
 Install dependencies via pip:
 

@@ -1,4 +1,5 @@
 import socket
+import os
 import dns.query
 import dns.update
 import dns.resolver
@@ -7,15 +8,17 @@ import dns.rcode
 import logging
 import paramiko
 import configparser
+import smtplib
+from email.message import EmailMessage
 
 """
 DNS_Failover
-Version: 1.2.2
+Version: 1.3.0
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
 
-config_path = "/usr/local/etc/dnsfailover/config.cfg"
+config_path = os.getenv("DNSFAILOVER_CONFIG", "/usr/local/etc/dnsfailover/config.cfg")
 
 config = configparser.ConfigParser()
 config.read(config_path)
@@ -52,6 +55,15 @@ space_limit = int(config['SETTINGS']['space_limit'])
 partition = config['SETTINGS']['partition']
 user = config['SETTINGS']['user']
 
+mailcfg = config['MAIL']
+mailserver = mailcfg['mx_server']
+mail_port = int(mailcfg.get('port', 25))
+mail_use_tls = mailcfg.getboolean('use_tls', fallback=False)
+mail_from = mailcfg['sender_email']
+mail_to = mailcfg['recipient_email']
+mail_username = mailcfg.get('username')
+mail_password = mailcfg.get('password')
+
 # Definition of logging
 logging.basicConfig(
     filename=logfile, 
@@ -61,6 +73,25 @@ logging.basicConfig(
     datefmt="%d.%m.%Y %H:%M:%S")
 
 logging.getLogger("paramiko").setLevel(logging.INFO)
+
+# Function for sending mail messages
+def send_mail(subject, message, cfg=None):
+    cfg = cfg or mailcfg
+
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = mail_from
+    msg['To'] = mail_to
+    msg.set_content(message)
+
+    with smtplib.SMTP(mailserver, mail_port) as smtp:
+        if mail_use_tls:
+            smtp.starttls()
+        if mail_username and mail_password: 
+            smtp.login(mail_username, mail_password)
+        smtp.send_message(msg)    
+        
+
 
 
 # Function to map Netcat "nc -zv IP-Adresse Port"
