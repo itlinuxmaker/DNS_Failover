@@ -180,7 +180,7 @@ Add the following line (adjust the path to your script accordingly):
 
 ## Logging
 
-All actions and errors are logged to the file `DNS-Failovertest.log` by default.
+All actions and errors are logged to the file `/var/log/bind/bind.log` by default.
 
 Sample log output:
 
