@@ -41,6 +41,7 @@ This ensures seamless service continuity by redirecting traffic to a backup mail
    - Logs the failure
    - Performs DNS failover by updating CNAME records to point to the backup server
 4. When the primary server becomes reachable again, the DNS records are restored automatically.
+5. If an nsupdate is triggered, i.e. one of the mail servers is not reachable, an email is sent to the person entered in the config (since version 1.3.0).
 
 ---
 
