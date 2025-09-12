@@ -257,20 +257,29 @@ def test_send_mail(mock_smtp):
         'sender_email': 'noreply@test.local',
         'recipient_email': 'admin@test.local',
         'mx_server': 'smtp.test.local',
-        'port': '587',
-        'use_tls': 'true',
+        'port': 587,
+        'use_tls': True,
         'username': 'testuser',
         'password': 'testpass'
     }
 
+    # Setup the mock
     mock_smtp_instance = MagicMock()
     mock_smtp.return_value.__enter__.return_value = mock_smtp_instance
 
-    send_mail("Test Subject", "Test message body", cfg=test_cfg)
+    # Call send_mail with explicit mailserver
+    send_mail(
+        mailserver="smtp.test.local",
+        subject="Test Subject",
+        message="Test message body",
+        cfg=test_cfg
+    )
 
-    mock_smtp.assert_called_once_with('mail.example.com', 587)
+    # Assert correct behavior
+    mock_smtp.assert_called_once_with("smtp.test.local", 587)
     mock_smtp_instance.starttls.assert_called_once()
-    mock_smtp_instance.login.assert_called_once_with('user', 'pass')
+    mock_smtp_instance.login.assert_called_once_with("user", "pass")
+    mock_smtp_instance.send_message.assert_called_once()
     assert mock_smtp_instance.send_message.call_count == 1
 
 # Testing main function

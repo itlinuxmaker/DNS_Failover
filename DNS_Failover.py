@@ -13,7 +13,7 @@ from email.message import EmailMessage
 
 """
 DNS_Failover
-Version: 1.3.0
+Version: 1.3.1
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -56,7 +56,6 @@ partition = config['SETTINGS']['partition']
 user = config['SETTINGS']['user']
 
 mailcfg = config['MAIL']
-mailserver = mailcfg['mx_server']
 mail_port = int(mailcfg.get('port', 25))
 mail_use_tls = mailcfg.getboolean('use_tls', fallback=False)
 mail_from = mailcfg['sender_email']
@@ -75,7 +74,7 @@ logging.basicConfig(
 logging.getLogger("paramiko").setLevel(logging.INFO)
 
 # Function for sending mail messages
-def send_mail(subject, message, cfg=None):
+def send_mail(mailserver, subject, message, cfg=None):
     cfg = cfg or mailcfg
 
     msg = EmailMessage()
@@ -288,7 +287,7 @@ def main():
                     f"An nsupdate is being issued on name server {ns}."
                 )
                 nsupdate_cnames (ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
-                send_mail(f"The mail server {mx1} is down!", notice)
+                send_mail(mx2, f"The mail server {mx1} is down!", notice)
         else:
             if count2 != 0:
                 if get_cname(f"{record_smtp}.{zone1}", ns) == mx2:
@@ -301,7 +300,7 @@ def main():
                         f"An nsupdate is being issued on name server {ns}."
                     )
                     nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
-                    send_mail(f"The mail server {mx2} is down!", notice)
+                    send_mail(mx1, f"The mail server {mx2} is down!", notice)
 
     logging.info(f"==== DNS-Failover has been completed ====")                   
 
