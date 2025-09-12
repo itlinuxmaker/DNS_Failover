@@ -235,7 +235,7 @@ def test_nsupdate_cnames_failure_rcode(mock_update_class, mock_query_tcp):
 
     # Return error code
     mock_response = MagicMock()
-    mock_response.rcode.return_value = 1  # eg. FORMERR
+    mock_response.rcode.return_value = 1  
     mock_query_tcp.return_value = mock_response
 
     result = nsupdate_cnames(
