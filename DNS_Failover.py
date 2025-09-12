@@ -14,7 +14,7 @@ from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.3.2
+Version: 1.3.3
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -275,7 +275,14 @@ def main():
         if get_cname(f"{record_mx}.{zone1}", ns) == mx2:
             logging.info(f"{mx1} is online, but CNAME still points to {mx2}")
             logging.info(f"Running nsupdate_cnames to {mx1}")
+            notice = (
+                    f"{mx1} is back online!!\n"
+                    f"The CNAME records are still pointing to {record_mx}.{zone1}.\n"
+                    f"Failover is switching to {mxip1}.\n"
+                    f"An nsupdate is being issued on name server {ns}."
+                )
             nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
+            send_mail(mx1, f"The mail server {mx1} back online!", notice)
 
     else:   
         if count1 != 0:
