@@ -293,7 +293,7 @@ def main():
             if count2 != 0:
                 if get_cname(f"{record_smtp}.{zone1}", ns) == mx2:
                     logging.info(f"{mx2} is offline, but CNAME still points to {record_smtp}.{zone1}")
-                    logging.info(f"Running nsupdate_cnames to zu {mx1}")
+                    logging.info(f"Running nsupdate_cnames to {mx1}")
                     notice = (
                         f"{mx2} is currently offline!\n"
                         f"The CNAME records are still pointing to {record_smtp}.{zone1}.\n"
