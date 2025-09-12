@@ -14,7 +14,7 @@ from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.3.3
+Version: 1.3.4
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -203,7 +203,6 @@ def nsupdate_cnames(ns, ttl, actualmx, zone1, records_zone1, zone2, records_zone
         update2.delete(fqdn, 'CNAME')
         update2.add(fqdn, ttl, 'CNAME', actualmx)
 
-    print(f"Sending update to {ns} for zone {zone2}...")
     try:
         response2 = dns.query.tcp(update2, ns, timeout=5)
         rcode2 = response2.rcode()
@@ -277,21 +276,21 @@ def main():
             logging.info(f"Running nsupdate_cnames to {mx1}")
             notice = (
                     f"{mx1} is back online!!\n"
-                    f"The CNAME records are still pointing to {record_mx}.{zone1}.\n"
-                    f"Failover is switching to {mxip1}.\n"
+                    f"The CNAME records are still pointing to {mx2}.\n"
+                    f"Failover is switching to {mx1}.\n"
                     f"An nsupdate is being issued on name server {ns}."
                 )
             nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
-            send_mail(mx1, f"The mail server {mx1} back online!", notice)
+            send_mail(mx1, f"The mail server {mx1} is back online!", notice)
 
     else:   
         if count1 != 0:
             if get_cname(f"{record_mx}.{zone1}", ns) != mx2:
-                logging.info(f"{mx1} is offline, but CNAME still points to {record_mx}.{zone1}")
+                logging.info(f"{mx1} is offline, but CNAME still points to {mx1}")
                 logging.info(f" {mx1}")
                 notice = (
                     f"{mx1} is currently offline!\n"
-                    f"The CNAME records are still pointing to {record_mx}.{zone1}.\n"
+                    f"The CNAME records are still pointing to {mx1}.\n"
                     f"Failover is switching to {mx2}.\n"
                     f"An nsupdate is being issued on name server {ns}."
                 )
@@ -300,11 +299,11 @@ def main():
         else:
             if count2 != 0:
                 if get_cname(f"{record_smtp}.{zone1}", ns) == mx2:
-                    logging.info(f"{mx2} is offline, but CNAME still points to {record_smtp}.{zone1}")
+                    logging.info(f"{mx2} is offline, but CNAME still points to {mx2}")
                     logging.info(f"Running nsupdate_cnames to {mx1}")
                     notice = (
                         f"{mx2} is currently offline!\n"
-                        f"The CNAME records are still pointing to {record_smtp}.{zone1}.\n"
+                        f"The CNAME records are still pointing to {mx2}.\n"
                         f"Failover is switching to {mx1}.\n"
                         f"An nsupdate is being issued on name server {ns}."
                     )
