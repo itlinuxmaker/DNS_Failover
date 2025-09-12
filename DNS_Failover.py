@@ -287,8 +287,8 @@ def main():
                     f"Failover is switching to {mx2}.\n"
                     f"An nsupdate is being issued on name server {ns}."
                 )
-                send_mail(f"The mail server {mx1} is down!", notice)
                 nsupdate_cnames (ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
+                send_mail(f"The mail server {mx1} is down!", notice)
         else:
             if count2 != 0:
                 if get_cname(f"{record_smtp}.{zone1}", ns) == mx2:
@@ -300,8 +300,8 @@ def main():
                         f"Failover is switching to {mx1}.\n"
                         f"An nsupdate is being issued on name server {ns}."
                     )
-                    send_mail(f"The mail server {mx2} is down!", notice)
                     nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
+                    send_mail(f"The mail server {mx2} is down!", notice)
 
     logging.info(f"==== DNS-Failover has been completed ====")                   
 
