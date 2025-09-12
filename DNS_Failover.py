@@ -91,9 +91,6 @@ def send_mail(subject, message, cfg=None):
             smtp.login(mail_username, mail_password)
         smtp.send_message(msg)    
         
-
-
-
 # Function to map Netcat "nc -zv IP-Adresse Port"
 def port_check(host, port, timeout=5):
     try:
@@ -281,17 +278,29 @@ def main():
 
     else:   
         if count1 != 0:
-            print (f"{mx1} ist offline!")
             if get_cname(f"{record_mx}.{zone1}", ns) != mx2:
                 logging.info(f"{mx1} is offline, but CNAME still points to {record_mx}.{zone1}")
-                logging.info(f"Running nsupdate_cnames to {mx2}")
+                logging.info(f" {mx1}")
+                notice = (
+                    f"{mx1} is currently offline!\n"
+                    f"The CNAME records are still pointing to {record_mx}.{zone1}.\n"
+                    f"Failover is switching to {mx2}.\n"
+                    f"An nsupdate is being issued on name server {ns}."
+                )
+                send_mail(f"The mail server {mx1} is down!", notice)
                 nsupdate_cnames (ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
         else:
             if count2 != 0:
-                print (f"{mx2} ist offline!")
                 if get_cname(f"{record_smtp}.{zone1}", ns) == mx2:
                     logging.info(f"{mx2} is offline, but CNAME still points to {record_smtp}.{zone1}")
                     logging.info(f"Running nsupdate_cnames to zu {mx1}")
+                    notice = (
+                        f"{mx2} is currently offline!\n"
+                        f"The CNAME records are still pointing to {record_smtp}.{zone1}.\n"
+                        f"Failover is switching to {mx1}.\n"
+                        f"An nsupdate is being issued on name server {ns}."
+                    )
+                    send_mail(f"The mail server {mx2} is down!", notice)
                     nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
 
     logging.info(f"==== DNS-Failover has been completed ====")                   

@@ -10,7 +10,6 @@ from DNS_Failover import fetchDiskUsage
 from DNS_Failover import service_availability
 from DNS_Failover import nsupdate_cnames
 from DNS_Failover import send_mail
-from email.message import EmailMessage
 from DNS_Failover import main
 import dns.resolver
 
