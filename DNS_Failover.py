@@ -10,10 +10,11 @@ import paramiko
 import configparser
 import smtplib
 from email.message import EmailMessage
+from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.3.1
+Version: 1.3.2
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -81,6 +82,7 @@ def send_mail(mailserver, subject, message, cfg=None):
     msg['Subject'] = subject
     msg['From'] = mail_from
     msg['To'] = mail_to
+    msg['Date'] = formatdate(localtime=True)
     msg.set_content(message)
 
     with smtplib.SMTP(mailserver, mail_port) as smtp:
