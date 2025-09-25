@@ -192,6 +192,28 @@ Sample log output:
 ```
 
 ---
+## System Requirements and Platform Notice
+**DNS-Failover is designed exclusively for use in Linux/Unix-based** mail server environments.
+The script performs checks and failover operations on services that are **not available or not supported** in the same way on Microsoft Windows.
+  
+### Required Services (must be running on the target mail servers):
+
+* BIND as the authoritative DNS server (must support nsupdate per RFC 2136)
+* Postfix as the Mail Transfer Agent (SMTP)
+
+* Dovecot for IMAP/POP3 access
+
+* MySQL with local UNIX socket (/var/run/mysqld/mysqld.sock)
+
+* SSH access to the mail servers (for remote checks)
+
+### Not supported:
+* Windows-based mail servers (e.g. Microsoft Exchange)
+* Windows DNS servers (do not support *nsupdate* in RFC 2136 format)
+* Environments without SSH or POSIX-compatible shell access
+
+**Note:** While the script can technically be executed on Windows (with Python installed), it will **not function correctly** unless the required Linux services are available on the target infrastructure.
+
 
 ## Further Information
 
