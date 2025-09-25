@@ -8,9 +8,10 @@
 
 ## Project Description
 
-`DNS_Failover` is a Python script that automatically performs DNS failover by updating CNAME records when critical services on a mail server become unreachable.
+`DNS_Failover` is a Python-based program that automatically performs DNS failover by updating CNAME records via RFC 2136 when critical services on a mail server (such as SMTP, IMAP, HTTPS, or MySQL) become unreachable.
+It is designed for Linux-based infrastructures using Postfix, Dovecot, and BIND, and ensures high availability by dynamically redirecting mail traffic to a standby server.
 
-This script is part of the redundant mail server concept described in detail at [https://www.linuxmaker.com](https://www.linuxmaker.com/linux/redundanter-mailserver.html).
+This program is part of the redundant mail server concept described in detail at [https://www.linuxmaker.com](https://www.linuxmaker.com/linux/redundanter-mailserver.html).
 
 > **Important:**  
 > This failover program is specifically designed to run on **Linux systems**.  
@@ -20,7 +21,7 @@ This script is part of the redundant mail server concept described in detail at 
 
 ## Purpose
 
-The script is intended to be installed **directly on the Bind9 DNS server** and executed regularly via a **cron job**. It monitors multiple services on two mail servers and automatically updates the relevant DNS CNAME records using `nsupdate` when a failure is detected.  
+The program is intended to be installed **directly on the Bind9 DNS server** and executed regularly via a **cron job**. It monitors multiple services on two mail servers and automatically updates the relevant DNS CNAME records using `nsupdate` when a failure is detected.  
 Additionally, the MySQL socket is checked for its existence and the storage capacity of the partition containing the movable server files is queried. Both of these actions can lead to a mail system failure.
 
 This ensures seamless service continuity by redirecting traffic to a backup mail server.
@@ -49,9 +50,9 @@ This ensures seamless service continuity by redirecting traffic to a backup mail
 
 ### Where to Install?
 
-The script **must be installed and run directly on the Bind9 DNS server**, as it performs DNS updates locally via `nsupdate`.
+The program **must be installed and run directly on the Bind9 DNS server**, as it performs DNS updates locally via `nsupdate`.
 
-The script monitors the following DNS records:
+The program monitors the following DNS records:
 
 * `mx`
 * `smtp`
@@ -165,13 +166,13 @@ You can also see a complete guide on setting up public key authentication at htt
 
 ## Scheduled Execution via Cron
 
-To run the script regularly (e.g., every 5 minutes), add a cron job entry by running:
+To run the program regularly (e.g., every 5 minutes), add a cron job entry by running:
 
 ```
 crontab -e
 ```
 
-Add the following line (adjust the path to your script accordingly):
+Add the following line (adjust the path to your program accordingly):
 
 ```
 */5 * * * * /usr/bin/python3 /usr/local/bin/DNS_failover.py
@@ -194,7 +195,7 @@ Sample log output:
 ---
 ## System Requirements and Platform Notice
 **DNS-Failover is designed exclusively for use in Linux/Unix-based** mail server environments.
-The script performs checks and failover operations on services that are **not available or not supported** in the same way on Microsoft Windows.
+The program performs checks and failover operations on services that are **not available or not supported** in the same way on Microsoft Windows.
   
 ### Required Services (must be running on the target mail servers):
 
@@ -212,7 +213,7 @@ The script performs checks and failover operations on services that are **not av
 * Windows DNS servers (do not support *nsupdate* in RFC 2136 format)
 * Environments without SSH or POSIX-compatible shell access
 
-**Note:** While the script can technically be executed on Windows (with Python installed), it will **not function correctly** unless the required Linux services are available on the target infrastructure.
+**Note:** While the program can technically be executed on Windows (with Python installed), it will **not function correctly** unless the required Linux services are available on the target infrastructure.
 
 
 ## Further Information
