@@ -14,7 +14,7 @@ from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.3.4
+Version: 1.4.0
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -117,6 +117,22 @@ def ssh_connection(host, user, port):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(hostname=host, username=user, port=port)
     return client
+
+# Function to checks the var partion on mail server for defect inodes
+def checkInodes(host, user, port, count):
+    client = ssh_connection(host, user, port)
+    try:
+        cmd = '/usr/local/bin/HD_fsck.sh'
+        stdin, stdout, stderr = client.exec_command(cmd)
+        output = stdout.read().decode().strip()
+        if output == "0":
+            logging.info(f"Filesystem is fine on  {host}.")
+        else:
+            count +=1
+            logging.info(f"Filesystem still has errors on  {host}.")
+        return count
+    finally:
+        client.close()
 
 # Function to checks for existence of the mysql socket
 def mysql_socket(host, user, port, count):
