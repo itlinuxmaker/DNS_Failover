@@ -126,10 +126,10 @@ def checkInodes(host, user, port, count):
         stdin, stdout, stderr = client.exec_command(cmd)
         output = stdout.read().decode().strip()
         if output == "0":
-            logging.info(f"Filesystem is fine on  {host}.")
+            logging.info(f"Filesystem is fine on {host}.")
         else:
             count +=1
-            logging.info(f"Filesystem still has errors on  {host}.")
+            logging.info(f"The file system already has errors on {host}.")
         return count
     finally:
         client.close()
@@ -279,6 +279,14 @@ def main():
     disk_usage2 = fetchDiskUsage(mxip2, user, port2, partition, count2, space_limit)
     if disk_usage2:
         count1 = disk_usage2        
+
+    vmail_check1 =  checkInodes(mxip1, user, port1, count1)
+    if vmail_check1:
+        count1 = vmail_check1
+
+    vmail_check2 =  checkInodes(mxip2, user, port2, count2)
+    if vmail_check2:
+        count2 = vmail_check2
 
     # Decision logic about which host has failed and should be replaced by the other host.
     # Host 1 is the default state and must be restored after a DNS failover if reachable.    
