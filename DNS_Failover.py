@@ -280,11 +280,11 @@ def main():
     if disk_usage2:
         count1 = disk_usage2        
 
-    vmail_check1 =  checkInodes(mxip1, user, port1, count1)
+    vmail_check1 = checkInodes(mxip1, user, port1, count1)
     if vmail_check1:
         count1 = vmail_check1
 
-    vmail_check2 =  checkInodes(mxip2, user, port2, count2)
+    vmail_check2 = checkInodes(mxip2, user, port2, count2)
     if vmail_check2:
         count2 = vmail_check2
 

@@ -1,6 +1,6 @@
 # DNS_Failover
 
-**Version**: 1.3.4
+**Version**: 1.4.0
 **Author**: Andreas Günther ([github@it-linuxmaker.com](mailto:github@it-linuxmaker.com))  
 **License**: GNU General Public License v3.0 or later
 
@@ -21,8 +21,9 @@ This program is part of the redundant mail server concept described in detail at
 
 ## Purpose
 
-The program is intended to be installed **directly on the Bind9 DNS server** and executed regularly via a **cron job**. It monitors multiple services on two mail servers and automatically updates the relevant DNS CNAME records using `nsupdate` when a failure is detected.  
+The program is intended to be installed **directly on the Bind9 DNS server** and executed regularly via a **cron job** or with a **systemd timer** as **systemd unit**. It monitors multiple services on two mail servers and automatically updates the relevant DNS CNAME records using `nsupdate` when a failure is detected.  
 Additionally, the MySQL socket is checked for its existence and the storage capacity of the partition containing the movable server files is queried. Both of these actions can lead to a mail system failure.
+With version 1.4.0, the program "fsck -n" calls the external Bash script HD_fsck.sh. This tests the vmail partition on the mail server for corrupted inodes.
 
 This ensures seamless service continuity by redirecting traffic to a backup mail server.
 
@@ -37,12 +38,12 @@ This ensures seamless service continuity by redirecting traffic to a backup mail
    - MySQL (port 3306)
    
 2. Checks MySQL socket availability and memory capacity
-
-3. If a service is unreachable on one server:
+3. Checks the vmail partition of the mail server for faulty inodes.
+4. If a service is unreachable on one server:
    - Logs the failure
    - Performs DNS failover by updating CNAME records to point to the backup server
-4. When the primary server becomes reachable again, the DNS records are restored automatically.
-5. If an nsupdate is triggered, i.e. one of the mail servers is not reachable, an email is sent to the person entered in the config (since version 1.3.0).
+5. When the primary server becomes reachable again, the DNS records are restored automatically.
+6. If an nsupdate is triggered, i.e. one of the mail servers is not reachable, an email is sent to the person entered in the config (since version 1.3.0).
 
 ---
 
@@ -85,6 +86,9 @@ sudo mkdir -p /usr/local/etc/dnsfailover
 ```
 ```
 sudo cp DNS_Failover/config/config.cfg /usr/local/etc/dnsfailover/
+
+sudo cp DNS_Failover/HD_fsck.sh /usr/local/bin/
+sudo chmod a+x /usr/local/bin/HD_fsck.sh
 ```
 
 ```
