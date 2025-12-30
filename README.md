@@ -1,6 +1,6 @@
 # DNS_Failover
 
-**Version**: 1.4.0
+**Version**: 1.4.1
 **Author**: Andreas Günther ([github@it-linuxmaker.com](mailto:github@it-linuxmaker.com))  
 **License**: GNU General Public License v3.0 or later
 

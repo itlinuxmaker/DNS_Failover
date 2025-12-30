@@ -14,7 +14,7 @@ from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.4.0
+Version: 1.4.1
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -124,6 +124,7 @@ def checkInodes(host, user, port, count):
     try:
         cmd = '/usr/local/bin/HD_fsck.sh'
         stdin, stdout, stderr = client.exec_command(cmd)
+        exit_status = stdout.channel.recv_exit_status()
         output = stdout.read().decode().strip()
         if output == "0":
             logging.info(f"Filesystem is fine on {host}.")
