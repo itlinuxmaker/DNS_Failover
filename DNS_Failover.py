@@ -14,7 +14,7 @@ from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.4.1
+Version: 1.4.2
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -37,10 +37,10 @@ mx2 = config['MX']['mx2']
 ns = config['SETTINGS']['ns']
 
 record_mx = config['RECORDS']['record_mx']
-record_smtp = config['RECORDS']['record_mx']
-record_imap = config['RECORDS']['record_smtp']
-record_mail = config['RECORDS']['record_imap']
-record_pop3 = config['RECORDS']['record_mail']
+record_smtp = config['RECORDS']['record_smtp']
+record_imap = config['RECORDS']['record_imap']
+record_mail = config['RECORDS']['record_mail']
+record_pop3 = config['RECORDS']['record_pop3']
 
 smtp = int(config['PORTS']['smtp'])
 imaps = int(config['PORTS']['imaps'])
@@ -85,12 +85,12 @@ def send_mail(mailserver, subject, message, cfg=None):
     msg['Date'] = formatdate(localtime=True)
     msg.set_content(message)
 
-    with smtplib.SMTP(mailserver, mail_port) as smtp:
+    with smtplib.SMTP(mailserver, mail_port) as smtp_conn:
         if mail_use_tls:
-            smtp.starttls()
+            smtp_conn.starttls()
         if mail_username and mail_password: 
-            smtp.login(mail_username, mail_password)
-        smtp.send_message(msg)    
+            smtp_conn.login(mail_username, mail_password)
+        smtp_conn.send_message(msg)    
         
 # Function to map Netcat "nc -zv IP-Adresse Port"
 def port_check(host, port, timeout=5):
@@ -115,8 +115,12 @@ def get_cname(hostname, nameserver):
 def ssh_connection(host, user, port):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname=host, username=user, port=port)
-    return client
+    try:
+        client.connect(hostname=host, username=user, port=port)
+        return client
+    except Exception as e:
+        logging.error(f"SSH connection to {host}:{port} failed: {e}")
+        raise
 
 # Function to checks the var partion on mail server for defect inodes
 def checkInodes(host, user, port, count):
@@ -175,8 +179,8 @@ def service_availability(mxip, port, count, service, record, zone, failovermx, n
     else:
         count += 1
         logging.error(f"The {service} service failed on host {mxip}.")
-        logging.info(f"The CNAME record on {ns} is updated to {record}.{zone} CNAME {failovermx}!")
-        return count
+        logging.info(f"The {service} service failed on {mxip}. Failover target would be {failovermx}.")
+    return count
 
 # Runs nsupdate, in this function, for at least two zones that have different records.
 def nsupdate_cnames(ns, ttl, actualmx, zone1, records_zone1, zone2, records_zone2):
@@ -240,103 +244,80 @@ def main():
     # The existence of the MySQL socket and the storage capacity of the partition are also checked.
     # The goal is that as soon as one of the services on Mailserver1 fails, Mailserver2 takes over completely.
     # The counter count1 reflects the state of mail server 1, analogous to the counter count2.
-    count1=0
-    count2=0
-    service_smtp1 = service_availability(mxip1, smtp, count1, "SMTP", record_smtp, zone1, mx2, ns)
-    if service_smtp1:
-        count1 = service_smtp1
-    service_smtp2 = service_availability(mxip2, smtp, count2, "SMTP", record_smtp, zone1, mx1, ns)
-    if service_smtp2:
-        count2 = service_smtp2
-    service_imap1 = service_availability(mxip1, imaps, count1, "IMAPs", record_imap, zone1, mx2, ns)
-    if service_imap1:
-        count1 = service_imap1
-    service_imap2 = service_availability(mxip2, imaps, count2, "IMAPs", record_imap, zone1, mx1, ns)
-    if service_imap2:
-        count2 = service_imap2
-    service_https1 = service_availability(mxip1, https, count1, "HTTPs", record_mail, zone1, mx2, ns)
-    if service_https1:
-        count1 = service_https1
-    service_https2 = service_availability(mxip2, https, count2, "HTTPs", record_mail, zone1, mx1, ns)
-    if service_https2:
-        count2 = service_https2         
-    service_mysql = service_availability(mxip1, mysql, count1, "MySQL", record_mail, zone1, mx2, ns)  
-    if service_mysql:  
-        count1 = service_mysql
-    service_mysql2 = service_availability(mxip2, mysql, count2, "MySQL", record_mail, zone1, mx1, ns)
-    if service_mysql2:
-        count2 = service_mysql2
+    count1 = 0
+    count2 = 0
 
-    mysql_socket1 = mysql_socket(mxip1, user, port1, count1)
-    if mysql_socket1:
-        count1 = mysql_socket1
-    mysql_socket2 = mysql_socket(mxip2, user, port2, count2)
-    if mysql_socket2:
-        count2 = mysql_socket2
+    count1 = service_availability(mxip1, smtp,  count1, "SMTP",  record_smtp, zone1, mx2, ns)
+    count2 = service_availability(mxip2, smtp,  count2, "SMTP",  record_smtp, zone1, mx1, ns)
+    count1 = service_availability(mxip1, imaps, count1, "IMAPs", record_imap, zone1, mx2, ns)
+    count2 = service_availability(mxip2, imaps, count2, "IMAPs", record_imap, zone1, mx1, ns)
+    count1 = service_availability(mxip1, https, count1, "HTTPs", record_mail, zone1, mx2, ns)
+    count2 = service_availability(mxip2, https, count2, "HTTPs", record_mail, zone1, mx1, ns)
+    count1 = service_availability(mxip1, mysql, count1, "MySQL", record_mail, zone1, mx2, ns)
+    count2 = service_availability(mxip2, mysql, count2, "MySQL", record_mail, zone1, mx1, ns)
 
-    disk_usage1 = fetchDiskUsage(mxip1, user, port1, partition, count1, space_limit)
-    if disk_usage1:
-        count1 = disk_usage1
-    disk_usage2 = fetchDiskUsage(mxip2, user, port2, partition, count2, space_limit)
-    if disk_usage2:
-        count1 = disk_usage2        
+    count1 = mysql_socket(mxip1, user, port1, count1)
+    count2 = mysql_socket(mxip2, user, port2, count2)
 
-    vmail_check1 = checkInodes(mxip1, user, port1, count1)
-    if vmail_check1:
-        count1 = vmail_check1
+    count1 = fetchDiskUsage(mxip1, user, port1, partition, count1, space_limit)
+    count2 = fetchDiskUsage(mxip2, user, port2, partition, count2, space_limit)
 
-    vmail_check2 = checkInodes(mxip2, user, port2, count2)
-    if vmail_check2:
-        count2 = vmail_check2
+    count1 = checkInodes(mxip1, user, port1, count1)
+    count2 = checkInodes(mxip2, user, port2, count2)
 
     # Decision logic about which host has failed and should be replaced by the other host.
-    # Host 1 is the default state and must be restored after a DNS failover if reachable.    
-
+    # Host 1 is the default state and must be restored after a DNS failover if reachable.
     records_zone1 = [record_mx, record_smtp, record_imap, record_mail, record_pop3]
     records_zone2 = [record_smtp, record_imap, record_mail, record_pop3]
 
     if count1 == 0 and count2 == 0:
-        if get_cname(f"{record_mx}.{zone1}", ns) == mx2:
-            logging.info(f"{mx1} is online, but CNAME still points to {mx2}")
-            logging.info(f"Running nsupdate_cnames to {mx1}")
+        # Beide online → CNAME muss auf MX1 zeigen
+        if get_cname(f"{record_mx}.{zone1}", ns) == mx1:
+            logging.info(f"Both servers online, CNAME correctly points to {mx1}. Nothing to do.")
+        else:
+            logging.info(f"Both servers online, but CNAME does not point to {mx1}. Correcting...")
             notice = (
-                    f"{mx1} is back online!!\n"
-                    f"The CNAME records are still pointing to {mx2}.\n"
-                    f"Failover is switching to {mx1}.\n"
-                    f"An nsupdate is being issued on name server {ns}."
-                )
-            nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
+                f"{mx1} is back online!!\n"
+                f"The CNAME records are still pointing to {mx2}.\n"
+                f"Failover is switching to {mx1}.\n"
+                f"An nsupdate is being issued on name server {ns}."
+            )
+            nsupdate_cnames(ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
             send_mail(mx1, f"The mail server {mx1} is back online!", notice)
 
-    else:   
-        if count1 != 0:
-            if get_cname(f"{record_mx}.{zone1}", ns) != mx2:
-                logging.info(f"{mx1} is offline, but CNAME still points to {mx1}")
-                logging.info(f" {mx1}")
-                notice = (
-                    f"{mx1} is currently offline!\n"
-                    f"The CNAME records are still pointing to {mx1}.\n"
-                    f"Failover is switching to {mx2}.\n"
-                    f"An nsupdate is being issued on name server {ns}."
-                )
-                nsupdate_cnames (ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
-                send_mail(mx2, f"The mail server {mx1} is down!", notice)
-        else:
-            if count2 != 0:
-                if get_cname(f"{record_smtp}.{zone1}", ns) == mx2:
-                    logging.info(f"{mx2} is offline, but CNAME still points to {mx2}")
-                    logging.info(f"Running nsupdate_cnames to {mx1}")
-                    notice = (
-                        f"{mx2} is currently offline!\n"
-                        f"The CNAME records are still pointing to {mx2}.\n"
-                        f"Failover is switching to {mx1}.\n"
-                        f"An nsupdate is being issued on name server {ns}."
-                    )
-                    nsupdate_cnames (ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
-                    send_mail(mx1, f"The mail server {mx2} is down!", notice)
+    elif count1 != 0 and count2 == 0:
+        # Nur MX2 online → Failover auf MX2
+        logging.info(f"{mx1} is offline, failing over to {mx2}.")
+        notice = (
+            f"{mx1} is currently offline!\n"
+            f"The CNAME records are still pointing to {mx1}.\n"
+            f"Failover is switching to {mx2}.\n"
+            f"An nsupdate is being issued on name server {ns}."
+        )
+        nsupdate_cnames(ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
+        send_mail(mx2, f"The mail server {mx1} is down!", notice)
+
+    elif count1 == 0 and count2 != 0:
+        # Nur MX1 online → CNAME auf MX1
+        logging.info(f"{mx2} is offline, switching back to {mx1}.")
+        notice = (
+            f"{mx2} is currently offline!\n"
+            f"The CNAME records are still pointing to {mx2}.\n"
+            f"Failover is switching to {mx1}.\n"
+            f"An nsupdate is being issued on name server {ns}."
+        )
+        nsupdate_cnames(ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
+        send_mail(mx1, f"The mail server {mx2} is down!", notice)
+
+    else:
+        # Beide offline → Fehlerzustand
+        logging.error(f"Both servers offline! No action possible.")
 
     logging.info(f"==== DNS-Failover has been completed ====")                   
 
 # Main programm
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.error(f"Fatal error: {e}")
