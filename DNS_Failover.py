@@ -271,7 +271,7 @@ def main():
     records_zone2 = [record_smtp, record_imap, record_mail, record_pop3]
 
     if count1 == 0 and count2 == 0:
-        # Beide online → CNAME muss auf MX1 zeigen
+        # Both online → CNAME must point to MX1
         if get_cname(f"{record_mx}.{zone1}", ns) == mx1:
             logging.info(f"Both servers online, CNAME correctly points to {mx1}. Nothing to do.")
         else:
@@ -286,7 +286,7 @@ def main():
             send_mail(mx1, f"The mail server {mx1} is back online!", notice)
 
     elif count1 != 0 and count2 == 0:
-        # Nur MX2 online → Failover auf MX2
+        # MX2 online only → Failover to MX2
         logging.info(f"{mx1} is offline, failing over to {mx2}.")
         notice = (
             f"{mx1} is currently offline!\n"
@@ -298,7 +298,7 @@ def main():
         send_mail(mx2, f"The mail server {mx1} is down!", notice)
 
     elif count1 == 0 and count2 != 0:
-        # Nur MX1 online → CNAME auf MX1
+        # Only MX1 online → CNAME on MX1
         logging.info(f"{mx2} is offline, switching back to {mx1}.")
         notice = (
             f"{mx2} is currently offline!\n"
@@ -310,7 +310,7 @@ def main():
         send_mail(mx1, f"The mail server {mx2} is down!", notice)
 
     else:
-        # Beide offline → Fehlerzustand
+        # Both offline → Error state
         logging.error(f"Both servers offline! No action possible.")
 
     logging.info(f"==== DNS-Failover has been completed ====")                   
