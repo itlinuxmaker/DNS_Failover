@@ -264,12 +264,6 @@ To activate and start the timer, execute the following:
 # systemctl list-timers DNS-Failover.timer
 ```
 
-Add the following line (adjust the path to your program accordingly):
-
-```
-*/5 * * * * /usr/bin/python3 /usr/local/bin/DNS_Failover.py
-```
-
 ---
 ## DNS zone file - TTL
 
