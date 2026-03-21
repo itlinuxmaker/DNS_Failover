@@ -10,6 +10,7 @@ from DNS_Failover import fetchDiskUsage
 from DNS_Failover import service_availability
 from DNS_Failover import nsupdate_cnames
 from DNS_Failover import send_mail
+from DNS_Failover import checkInodes
 from DNS_Failover import main
 import dns.resolver
 
@@ -282,24 +283,61 @@ def test_send_mail(mock_smtp):
     mock_smtp_instance.send_message.assert_called_once()
     assert mock_smtp_instance.send_message.call_count == 1
 
+# Testing function checkInodes()
+@patch("DNS_Failover.paramiko.SSHClient")
+def test_checkInodes_success(mock_ssh_client_class):
+    mock_client = MagicMock()
+    mock_ssh_client_class.return_value = mock_client
+
+    mock_stdout = MagicMock()
+    mock_stdout.channel.recv_exit_status.return_value = 0
+    mock_stdout.read.return_value = b"0\n"
+    mock_client.exec_command.return_value = (None, mock_stdout, None)
+
+    count = 0
+    result = checkInodes("host", "user", 22, count)
+
+    assert result == 0
+    mock_client.exec_command.assert_called_once()
+
+
+@patch("DNS_Failover.paramiko.SSHClient")
+def test_checkInodes_failure(mock_ssh_client_class):
+    mock_client = MagicMock()
+    mock_ssh_client_class.return_value = mock_client
+
+    mock_stdout = MagicMock()
+    mock_stdout.channel.recv_exit_status.return_value = 1
+    mock_stdout.read.return_value = b"1\n"
+    mock_client.exec_command.return_value = (None, mock_stdout, None)
+
+    count = 0
+    result = checkInodes("host", "user", 22, count)
+
+    assert result == 1
+    mock_client.exec_command.assert_called_once()
+
 # Testing main function
+@patch('smtplib.SMTP')
+@patch('DNS_Failover.checkInodes')
 @patch('DNS_Failover.fetchDiskUsage')
 @patch('DNS_Failover.mysql_socket')
 @patch('DNS_Failover.service_availability')
 @patch('DNS_Failover.get_cname')
 @patch('DNS_Failover.nsupdate_cnames')
-def test_main(mock_nsupdate_cnames, mock_get_cname, mock_service_availability, mock_mysql_socket, mock_fetchDiskUsage):
+def test_main(mock_nsupdate_cnames, mock_get_cname, mock_service_availability, mock_mysql_socket, mock_fetchDiskUsage, mock_checkInodes, mock_smtp):
     mock_get_cname.return_value = "target-mx.example."
     mock_nsupdate_cnames.return_value = True
-
     mock_service_availability.return_value = 0
     mock_mysql_socket.return_value = 0
     mock_fetchDiskUsage.return_value = 0
+    mock_checkInodes.return_value = 0
 
     main()
 
     assert mock_service_availability.call_count > 0
     assert mock_mysql_socket.call_count > 0
     assert mock_fetchDiskUsage.call_count > 0
+    assert mock_checkInodes.call_count > 0
     assert mock_get_cname.call_count > 0
     assert mock_nsupdate_cnames.call_count >= 0
