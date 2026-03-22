@@ -14,7 +14,7 @@ from email.utils import formatdate
 
 """
 DNS_Failover
-Version: 1.4.2
+Version: 1.5.0
 Author: Andreas Günther, github@it-linuxmaker.com
 License: GNU General Public License v3.0 or later
 """
@@ -288,26 +288,46 @@ def main():
     elif count1 != 0 and count2 == 0:
         # MX2 online only → Failover to MX2
         logging.info(f"{mx1} is offline, failing over to {mx2}.")
-        notice = (
-            f"{mx1} is currently offline!\n"
-            f"The CNAME records are still pointing to {mx1}.\n"
-            f"Failover is switching to {mx2}.\n"
-            f"An nsupdate is being issued on name server {ns}."
-        )
-        nsupdate_cnames(ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
-        send_mail(mx2, f"The mail server {mx1} is down!", notice)
+        current_cname = get_cname(f"{record_mx}.{zone1}", ns)
+        if current_cname == mx2:
+            logging.info(f"{mx1} is still offline. DNS already points to {mx2}. No action required.")
+            notice = (
+                f"{mx1} is still offline!\n"
+                f"The CNAME records are already pointing to {mx2}.\n"
+                f"An nsupdate has already been performed on the nameserver. {ns}."
+            )
+            send_mail(mx2, f"The mail server {mx1} is still offline and waiting to go online!", notice)
+        else:
+            notice = (
+                f"{mx1} is currently offline!\n"
+                f"The CNAME records are still pointing to {mx1}.\n"
+                f"Failover is switching to {mx2}.\n"
+                f"An nsupdate is being issued on name server {ns}."
+            )
+            nsupdate_cnames(ns, ttl, mx2, zone1, records_zone1, zone2, records_zone2)
+            send_mail(mx2, f"The mail server {mx1} is down!", notice)
 
     elif count1 == 0 and count2 != 0:
         # Only MX1 online → CNAME on MX1
-        logging.info(f"{mx2} is offline, switching back to {mx1}.")
-        notice = (
-            f"{mx2} is currently offline!\n"
-            f"The CNAME records are still pointing to {mx2}.\n"
-            f"Failover is switching to {mx1}.\n"
-            f"An nsupdate is being issued on name server {ns}."
-        )
-        nsupdate_cnames(ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
-        send_mail(mx1, f"The mail server {mx2} is down!", notice)
+        current_cname = get_cname(f"{record_mx}.{zone1}", ns)
+        if current_cname == mx1:
+            logging.info(f"{mx2} is still offline. DNS already points to {mx1}. No action required.")
+            notice = (
+                f"{mx2} is still offline!\n"
+                f"The CNAME records are already pointing to {mx1}.\n"
+                f"An nsupdate has already been performed on the nameserver. {ns}."
+            )
+            send_mail(mx1, f"The mail server {mx2} is still offline and waiting to go online!", notice)
+        else:
+            logging.info(f"{mx2} is offline, switching back to {mx1}.")
+            notice = (
+                f"{mx2} is currently offline!\n"
+                f"The CNAME records are still pointing to {mx2}.\n"
+                f"Failover is switching to {mx1}.\n"
+                f"An nsupdate is being issued on name server {ns}."
+            )
+            nsupdate_cnames(ns, ttl, mx1, zone1, records_zone1, zone2, records_zone2)
+            send_mail(mx1, f"The mail server {mx2} is down!", notice)
 
     else:
         # Both offline → Error state
